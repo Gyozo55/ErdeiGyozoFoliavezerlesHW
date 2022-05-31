@@ -1,5 +1,11 @@
+import time
+from datetime import datetime, timedelta
+
 import requests
 import json
+
+
+# 46.912438, 19.692221
 
 
 def fetch_data(url, querystring):
@@ -29,10 +35,12 @@ def current_weather():
     querystring = {"lat": "46.912438", "lng": "19.692221"}
 
     response = fetch_data(url, querystring)
+
     summary_string = json.loads(response.text).get('data').get('summary')
     temperature_in_celsius = temp_to_celsius(int(json.loads(response.text).get('data').get('temperature')))
-    result_writer('currentWeathers.txt', summary_string)
-    result_writer('currentWeathers.txt', str(temperature_in_celsius))
+
+    result_writer('currentWeathers.txt', f"{datetime.now().strftime('%c')}: {summary_string}, "
+                                         f"{str(temperature_in_celsius)} °C")
 
 
 # Weather Forecast
@@ -42,16 +50,21 @@ def forecast_weather():
     querystring = {"lat": "46.912438", "lng": "19.692221"}
 
     response = fetch_data(url, querystring)
+
     summary_string = json.loads(response.text).get('data').get('forecast')[0].get('summary')
-    temperature_in_celsius = temp_to_celsius(
-        int(json.loads(response.text).get('data').get('forecast')[0].get('temperature')))
-    print(summary_string)
-    print(temperature_in_celsius)
+    temperature_in_celsius = temp_to_celsius(int(json.loads(response.text).get('data').get('forecast')[0]
+                                                 .get('temperature')))
+
+    result_writer('forecastWeathers.txt', f"{(datetime.now() + timedelta(hours=1)).strftime('%c')}: {summary_string}, "
+                                          f"{str(temperature_in_celsius)} °C")
 
 
-# 46.912438, 19.692221
+def interval_data_creation():
+    while True:
+        forecast_weather()
+        current_weather()
+        time.sleep(300)
 
 
 if __name__ == '__main__':
-    forecast_weather()
-    current_weather()
+    interval_data_creation()
